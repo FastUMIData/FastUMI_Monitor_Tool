@@ -134,12 +134,6 @@
 4. **clamp/Data**：rostopic echo SNXXXX/clamp/Data 标准值范围为0～88，随Fast UMI抓夹开合程度动态变化
 5. **rviz**：rviz查看各位置摄像头图像是否清晰无明显卡顿
 
-### 示例1：监控IMU数据
-```bash
-# 输入：1,2
-# 结果：同时监控IMU频率和查看IMU数据内容
-
-
 ## ⚠️ 注意事项
 
 1. **设备连接**：确保XV SDK设备已正确连接
