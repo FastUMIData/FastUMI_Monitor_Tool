@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import sys
 import rospy
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 import tf.transformations as tf_trans
 from rospy import Duration
-import os
 
-SERIAL_NUMBER = os.environ.get('xv_serial_number')
+
+SERIAL_NUMBER = sys.argv[1]
 class PoseStampedToMarkers:
     def __init__(self):
         self.in_topic   = rospy.get_param("~in_topic", f"/xv_sdk/{SERIAL_NUMBER}/slam/visual_pose")
@@ -24,7 +24,7 @@ class PoseStampedToMarkers:
         self.fade_duration = float(rospy.get_param("~fade_duration", 1.0))  # 渐变持续时间(秒)
         self.stationary_threshold = float(rospy.get_param("~stationary_threshold", 2.0))  # 静止检测阈值(秒)
         self.stationary_fade_speed = float(rospy.get_param("~stationary_fade_speed", 2.0))  # 静止时衰减速度
-        self.update_rate = flo"250801DR48FP25002993"at(rospy.get_param("~update_rate", 10.0))  # 更新频率(Hz)
+        self.update_rate = float(rospy.get_param("~update_rate", 10.0))  # 更新频率(Hz)
 
         # 发布MarkerArray消息
         self.pub = rospy.Publisher(self.out_topic, MarkerArray, queue_size=1, latch=True)
