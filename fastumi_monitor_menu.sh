@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-XVISIO_SERIALS=($(rostopic list 2>/dev/null | grep -o '/xv_sdk/[^/]*' | cut -d'/' -f3 | grep -v -E '^(parameter_descriptions|parameter_updates|new_device)$' | sort -u))
-bash rviz/scripts/generate_configs.sh $XVISIO_SERIALS
-echo "generate rviz config success"
-python3 pose_to_markers.py $XVISIO_SERIALS &
-echo "wait start pose_to_markers.py"
-sleep 2
-echo "open menu"
-bash run_rostopic_menu.sh $XVISIO_SERIALS
+XVISIO_SERIALS=$(rostopic list 2>/dev/null | grep -o '/xv_sdk/[^/]*' | cut -d'/' -f3 | grep -v -E '^(parameter_descriptions|parameter_updates|new_device)$' | sort -u)
+echo $XVISIO_SERIALS
+
+#cat -A <<< "$XVISIO_SERIALS"
+
+mapfile -t XVISIO_SERIAL_ARRAY <<< "$XVISIO_SERIALS"
+
+
+# 遍历数组
+for item in ${XVISIO_SERIAL_ARRAY[@]}; do
+    echo "当前序列号: $item"
+    gnome-terminal -- bash -c "bash single_fastumi_monitor_menu.sh"
+done
+
+
