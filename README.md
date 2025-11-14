@@ -24,7 +24,7 @@
 
 2. **运行脚本**
    ```bash
-   bsh fastumi_monitor_menu.sh
+   bash fastumi_monitor_menu.sh
    ```
 
 3. **基本使用**
