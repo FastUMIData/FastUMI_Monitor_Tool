@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # 主题前缀（根据你的实际设备 ID）
-SERIAL_NUMBER=$xv_serial_number
+SERIAL_NUMBER=$1
 TOPIC_PREFIX="/xv_sdk/${SERIAL_NUMBER}"
 # RVIZ_PATH="/home/onestar/catkin_ws/src/xv_sdk/rviz/"
 CURRENT_PATH=`pwd`
