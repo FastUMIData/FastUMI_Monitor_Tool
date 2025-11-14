@@ -127,6 +127,19 @@
 # 结果：监控IMU频率、SLAM频率、RGB相机频率，启动四鱼眼视图和整体可视化
 ```
 
+## 📝 指标参考
+1. **slam/pose**：rostopic hz SNXXXX/slam/pose 标准频率为500
+2. **color_camera/image_color**：rostopic hz SNXXXX/color_camera/image_color 标准频率为60
+3. **tof_camera/image**：rostopic hz SNXXXX/tof_camera/image标准频率为30
+4. **clamp/Data**：rostopic echo SNXXXX/clamp/Data 标准值范围为0～88，随Fast UMI抓夹开合程度动态变化
+5. **rviz**：rviz查看各位置摄像头图像是否清晰无明显卡顿
+
+### 示例1：监控IMU数据
+```bash
+# 输入：1,2
+# 结果：同时监控IMU频率和查看IMU数据内容
+
+
 ## ⚠️ 注意事项
 
 1. **设备连接**：确保XV SDK设备已正确连接
