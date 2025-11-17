@@ -14,6 +14,15 @@
 - Ubuntu 20.04
 - ROS Noetic
 
+### 前置条件
+1. **环境(请务必创建同名虚拟环境避免脚本执行错误)**
+   ```bash
+   conda create -n fastumi python=3.8
+   conda activate fastumi
+   pip install -r requirements.txt
+   ```
+---
+
 
 ### 安装与运行
 0. **启动相机**

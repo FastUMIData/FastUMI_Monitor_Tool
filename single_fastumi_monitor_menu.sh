@@ -2,7 +2,10 @@
 XVISIO_SERIALS=($(rostopic list 2>/dev/null | grep -o '/xv_sdk/[^/]*' | cut -d'/' -f3 | grep -v -E '^(parameter_descriptions|parameter_updates|new_device)$' | sort -u))
 bash rviz/scripts/generate_configs.sh $XVISIO_SERIALS
 echo "generate rviz config success"
-python3 pose_to_markers.py $XVISIO_SERIALS &
+echo "install dependencies"
+conda run -n fastumi pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+echo "install dependencies finish"
+conda run -n fastumi python3 pose_to_markers.py $XVISIO_SERIALS &
 echo "wait start pose_to_markers.py"
 sleep 2
 echo "open menu"
