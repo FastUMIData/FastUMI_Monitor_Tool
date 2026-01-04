@@ -1,21 +1,21 @@
-# ROS主题监控脚本使用教程
+# ROS Topic Monitoring Script User Guide
 
-## 📋 项目简介
+## 📋 Project Overview
 
-这是一个用于监控和可视化XV SDK设备数据的交互式脚本，主要功能包括：
-- 监控各种传感器的数据频率（Hz）
-- 实时查看传感器数据内容
-- 启动RViz可视化界面
-- 支持多终端并行运行
+This is an interactive script for monitoring and visualizing data from **XV SDK** devices. Key features include:
+- Monitor the data rate (Hz) of various sensors
+- View sensor message contents in real time
+- Launch RViz for visualization
+- Support parallel execution across multiple terminals
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
+### Requirements
 - Ubuntu 20.04
 - ROS Noetic
 
-### 前置条件
-1. **环境(请务必创建同名虚拟环境避免脚本执行错误)**
+### Prerequisites
+1. **Environment (strongly recommended: create a virtual environment with the same name to avoid script errors)**
    ```bash
    conda create -n fastumi python=3.8.5
    conda activate fastumi
@@ -23,201 +23,196 @@
    ```
 ---
 
-
-### 安装与运行
-0. **启动相机**
+### Installation & Running
+0. **Start the camera**
    ```bash
    roslaunch xv_sdk xv_sdk.launch
    ```
 
-1. **确保脚本有执行权限**
+1. **Make the script executable**
    ```bash
    chmod +x fastumi_monitor_menu.sh
    ```
 
-2. **运行脚本**
+2. **Run the script**
    ```bash
    bash fastumi_monitor_menu.sh
    ```
 
-3. **基本使用**
-   - 运行后会出现菜单界面
-   - 输入对应编号即可执行相应功能
-   - 输入 `0` 退出脚本
+3. **Basic usage**
+   - A menu will appear after launching
+   - Enter the corresponding number to execute the selected function
+   - Enter `0` to exit
 
-## 📊 功能详解
+## 📊 Feature Details
 
-### 传感器频率监控 (1-10)
+### Sensor Frequency Monitoring (1–10)
 
-| 编号 | 功能 | 监控内容 |
+| ID | Function | What It Monitors |
 |------|------|----------|
-| 1 | IMU频率监控 | `slam/pose` 主题频率 |
-| 2 | IMU数据读取 | `slam/pose` 主题内容 |
-| 3 | SLAM频率监控 | `slam/visual_pose` 主题频率 |
-| 4 | SLAM数据读取 | `slam/visual_pose` 主题内容 |
-| 5 | RGB相机频率 | `color_camera/camera_info` 频率 |
-| 6 | 左前鱼眼相机频率 | `fisheye_cameras/left/camera_info` 频率 |
-| 7 | 左上鱼眼相机频率 | `fisheye_cameras/left2/camera_info` 频率 |
-| 8 | 右前鱼眼相机频率 | `fisheye_cameras/right/camera_info` 频率 |
-| 9 | 右上鱼眼相机频率 | `fisheye_cameras/right2/camera_info` 频率 |
-| 10 | TOF相机频率 | `tof_camera/camera_info` 频率 |
-| 21 | 夹具数据读取 | `/clamp/Data` 主题内容 |
+| 1 | IMU frequency monitor | `slam/pose` topic rate |
+| 2 | Read IMU data | `slam/pose` topic content |
+| 3 | SLAM frequency monitor | `slam/visual_pose` topic rate |
+| 4 | Read SLAM data | `slam/visual_pose` topic content |
+| 5 | RGB camera frequency | `color_camera/camera_info` rate |
+| 6 | Front-left fisheye camera frequency | `fisheye_cameras/left/camera_info` rate |
+| 7 | Upper-left fisheye camera frequency | `fisheye_cameras/left2/camera_info` rate |
+| 8 | Front-right fisheye camera frequency | `fisheye_cameras/right/camera_info` rate |
+| 9 | Upper-right fisheye camera frequency | `fisheye_cameras/right2/camera_info` rate |
+| 10 | TOF camera frequency | `tof_camera/camera_info` rate |
+| 21 | Read clamp data | `/clamp/Data` topic content |
 
-### RViz可视化界面 (11-20)
+### RViz Visualization (11–20)
 
-| 编号 | 功能 | 配置文件 |
+| ID | Function | Config File |
 |------|------|----------|
-| 11 | 四鱼眼视图 | `four_fisheyes.rviz` |
-| 12 | 左前鱼眼 | `fisheye_left.rviz` |
-| 13 | 左上鱼眼 | `fisheye_left2.rviz` |
-| 14 | 右前鱼眼 | `fisheye_right.rviz` |
-| 15 | 右上鱼眼 | `fisheye_right2.rviz` |
-| 16 | RGBD相机 | `rgbd_camera.rviz` |
-| 17 | RGB相机 | `rgb_camera.rviz` |
-| 18 | TOF传感器 | `tof.rviz` |
-| 19 | SLAM可视化 | `slam_visualization.rviz` |
-| 20 | 整体可视化 | `general.rviz` |
+| 11 | Four-fisheye view | `four_fisheyes.rviz` |
+| 12 | Front-left fisheye | `fisheye_left.rviz` |
+| 13 | Upper-left fisheye | `fisheye_left2.rviz` |
+| 14 | Front-right fisheye | `fisheye_right.rviz` |
+| 15 | Upper-right fisheye | `fisheye_right2.rviz` |
+| 16 | RGBD camera | `rgbd_camera.rviz` |
+| 17 | RGB camera | `rgb_camera.rviz` |
+| 18 | TOF sensor | `tof.rviz` |
+| 19 | SLAM visualization | `slam_visualization.rviz` |
+| 20 | Full visualization | `general.rviz` |
 
-## 💡 高级使用技巧
+## 💡 Advanced Tips
 
-### 批量执行
+### Batch Execution
 
-脚本支持多种输入格式：
+The script supports multiple input formats:
 
 ```bash
-# 单个编号
+# Single ID
 1
 
-# 逗号分隔
+# Comma-separated
 1,3,5
 
-# 范围（支持正序和倒序）
+# Ranges (both ascending and descending are supported)
 1-5
 5-1
 
-# 混合使用
+# Mixed
 1,3-5,10
 ```
 
-### 并行监控
+### Parallel Monitoring
 
-- 可以同时启动多个监控窗口
-- 每个功能在新终端窗口中运行
-- 支持同时监控多个传感器
+- You can launch multiple monitoring windows at the same time
+- Each function runs in a **new terminal window**
+- Supports monitoring multiple sensors simultaneously
 
-### 环境自动配置
+### Automatic Environment Setup
 
-脚本会自动加载以下ROS环境：
+The script will automatically source the following ROS environments:
 - `/opt/ros/noetic/setup.bash`
 - `/opt/ros/melodic/setup.bash`
 - `~/catkin_ws/devel/setup.bash`
 - `~/ros_ws/devel/setup.bash`
 
+## 📝 Examples
 
-## 📝 使用示例
-
-### 示例1：监控IMU数据
+### Example 1: Monitor IMU data
 ```bash
-# 输入：1,2
-# 结果：同时监控IMU频率和查看IMU数据内容
+# Input: 1,2
+# Result: monitor IMU topic rate and view IMU messages simultaneously
 ```
 
-### 示例2：启动多个相机视图
+### Example 2: Launch multiple camera views
 ```bash
-# 输入：11-15
-# 结果：启动所有鱼眼相机的RViz视图
+# Input: 11-15
+# Result: launch all fisheye camera RViz views
 ```
 
-### 示例3：全面监控
+### Example 3: Full monitoring
 ```bash
-# 输入：1-10
-# 结果：监控所有传感器的频率
+# Input: 1-10
+# Result: monitor the rates of all sensor topics
 ```
 
-### 示例4：混合使用
+### Example 4: Mixed usage
 ```bash
-# 输入：1,3-5,11,20
-# 结果：监控IMU频率、SLAM频率、RGB相机频率，启动四鱼眼视图和整体可视化
+# Input: 1,3-5,11,20
+# Result: monitor IMU rate, SLAM rate, RGB camera rate; launch four-fisheye view and full visualization
 ```
 
-## 📝 指标参考
-1. **slam/pose**：rostopic hz SNXXXX/slam/pose 标准频率为500
-2. **color_camera/image_color**：rostopic hz SNXXXX/color_camera/image_color 标准频率为60
-3. **tof_camera/image**：rostopic hz SNXXXX/tof_camera/image标准频率为30
-4. **clamp/Data**：rostopic echo SNXXXX/clamp/Data 标准值范围为0～88，随Fast UMI抓夹开合程度动态变化
-5. **rviz**：rviz查看各位置摄像头图像是否清晰无明显卡顿
+## 📝 Reference Metrics
+1. **slam/pose**: `rostopic hz SNXXXX/slam/pose` — standard rate is **500 Hz**
+2. **color_camera/image_color**: `rostopic hz SNXXXX/color_camera/image_color` — standard rate is **60 Hz**
+3. **tof_camera/image**: `rostopic hz SNXXXX/tof_camera/image` — standard rate is **30 Hz**
+4. **clamp/Data**: `rostopic echo SNXXXX/clamp/Data` — normal value range is **0–88**, dynamically changing with the Fast UMI gripper opening/closing degree
+5. **rviz**: use RViz to verify that camera images at each position are clear and show no obvious stuttering
 
-## ⚠️ 注意事项
+## ⚠️ Notes
 
-1. **设备连接**：确保XV SDK设备已正确连接
-2. **ROS环境**：确保ROS环境已正确配置
-3. **权限问题**：确保脚本有执行权限
-4. **终端窗口**：新开的终端窗口可以通过Ctrl-C停止或直接关闭
-5. **配置文件**：确保RViz配置文件存在于指定路径
+1. **Device connection**: Make sure the XV SDK device is properly connected
+2. **ROS environment**: Ensure the ROS environment is correctly configured
+3. **Permissions**: Make sure the script has execution permission
+4. **Terminal windows**: You can stop any newly opened terminal with Ctrl-C, or simply close the window
+5. **Config files**: Make sure RViz config files exist at the specified path
 
-## 🛠️ 故障排除
+## 🛠️ Troubleshooting
 
-### 常见问题
+### Common Issues
 
-#### 1. 找不到终端程序
+#### 1. Terminal program not found
 ```bash
-# 安装gnome-terminal
+# Install gnome-terminal
 sudo apt install gnome-terminal
 
-# 或安装其他终端
+# Or install another terminal emulator
 sudo apt install konsole
 sudo apt install xfce4-terminal
 sudo apt install tilix
 ```
 
-#### 2. ROS环境未加载
+#### 2. ROS environment not sourced
 ```bash
-# 手动source环境
+# Manually source environments
 source /opt/ros/noetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
 
-# 检查ROS环境
+# Check ROS environment
 echo $ROS_PACKAGE_PATH
 ```
 
-#### 3. 设备ID不匹配
+#### 3. Device ID mismatch
 ```bash
-# 检查设备连接状态
+# Check device connection status
 lsusb | grep -i xv
 
-# 查看实际主题名称
+# Inspect actual topic names
 rostopic list | grep xv_sdk
 
-# 修改脚本中的TOPIC_PREFIX
+# Modify TOPIC_PREFIX in the script
 ```
 
-#### 4. RViz配置文件不存在
+#### 4. RViz config file missing
 ```bash
-# 检查配置文件路径
+# Check RViz config path
 ls -la /home/onestar/catkin_ws/src/xv_sdk/rviz/
 
-# 如果路径不存在，修改脚本中的RVIZ_PATH
+# If the path doesn't exist, modify RVIZ_PATH in the script
 ```
 
-#### 5. 权限问题
+#### 5. Permission issues
 ```bash
-# 给脚本添加执行权限
+# Add execution permission to the script
 chmod +x run_rostopic_menu.sh
 
-# 检查文件权限
+# Check file permissions
 ls -la run_rostopic_menu.sh
 ```
 
-## 🎯 最佳实践
+## 🎯 Best Practices
 
-1. **首次使用**：建议先运行单个功能测试
-2. **性能监控**：使用频率监控功能检查数据流
-3. **可视化调试**：结合RViz视图进行视觉调试
-4. **批量操作**：合理使用范围输入提高效率
-5. **设备调试**：先监控频率，再查看数据内容
-6. **多窗口管理**：合理使用多个终端窗口进行并行监控
+1. **First-time use**: start with a single function to validate setup
+2. **Performance monitoring**: use rate monitoring to verify stable data streams
+3. **Visual debugging**: combine RViz views with topic monitoring
+4. **Batch operations**: use range inputs to improve efficiency
+5. **Device debugging workflow**: check frequency first, then inspect message contents
+6. **Multi-window management**: use multiple terminals strategically for parallel monitoring
 
-
-
-
-**提示**：新开的终端窗口中按 Ctrl-C 可停止，或直接关闭窗口。
+**Tip**: In any newly opened terminal window, press **Ctrl-C** to stop, or simply close the window.
