@@ -1,5 +1,7 @@
 # ROS2主题监控脚本使用教程
 
+[中文](README_CN.md) | [English](README.md)
+
 ## 📋 项目简介
 
 这是一个用于监控和可视化XV SDK设备数据的交互式脚本（ROS2 Galactic版本），主要功能包括：
