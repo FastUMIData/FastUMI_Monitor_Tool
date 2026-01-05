@@ -72,7 +72,6 @@ build_shell_command() {
   # 按需加载常见 ROS2 环境
   local src_cmd=""
   src_cmd+="if [ -f /opt/ros/galactic/setup.bash ]; then source /opt/ros/galactic/setup.bash; fi;"
-  src_cmd+="if [ -f /opt/ros/humble/setup.bash ]; then source /opt/ros/humble/setup.bash; fi;"
   src_cmd+="if [ -f \"\$HOME/ros2_ws/install/setup.bash\" ]; then source \"\$HOME/ros2_ws/install/setup.bash\"; fi;"
   src_cmd+="if [ -f \"\$HOME/colcon_ws/install/setup.bash\" ]; then source \"\$HOME/colcon_ws/install/setup.bash\"; fi;"
 
