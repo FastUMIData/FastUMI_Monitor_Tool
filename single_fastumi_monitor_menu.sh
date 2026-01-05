@@ -8,32 +8,32 @@ XVISIO_SERIALS="$1"
 if [ -z "$XVISIO_SERIALS" ]; then
     echo "用法: bash single_fastumi_monitor_menu.sh <设备序列号>"
     echo "示例: bash single_fastumi_monitor_menu.sh SN250801DR48FP25002587"
-    echo "注意: 序列号需要带SN前缀"
+    echo "注意: serial number should start with 'SN'"
     exit 1
 fi
 
 # 验证序列号格式
 if [[ ! "$XVISIO_SERIALS" =~ ^SN ]]; then
-    echo "警告: 序列号应以SN开头，如: SN250801DR48FP25002587"
-    echo "收到的序列号: $XVISIO_SERIALS"
+    echo "Warning: Serial number should start with SN, e.g.: SN250801DR48FP25002587"
+    echo "Received serial number: $XVISIO_SERIALS"
 fi
 
-echo "初始化设备: $XVISIO_SERIALS"
+echo "Initializing device: $XVISIO_SERIALS"
 
 # 生成RViz配置文件
 bash rviz/scripts/generate_configs.sh $XVISIO_SERIALS
-echo "RViz配置文件生成成功"
+echo "RViz config generated for device: $XVISIO_SERIALS"
 
 # 安装Python依赖
-echo "安装依赖..."
+echo "Installing dependencies..."
 conda run -n fastumi pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-echo "依赖安装完成"
+echo "Dependencies installed"
 
 # 启动pose_to_markers节点（后台运行）
 conda run -n fastumi python3 pose_to_markers.py $XVISIO_SERIALS &
-echo "等待 pose_to_markers.py 启动..."
+echo "waiting for pose_to_markers.py to start..."
 sleep 2
 
 # 打开交互式菜单
-echo "打开监控菜单"
+echo "opening monitor menu..."
 bash run_ros2topic_menu.sh $XVISIO_SERIALS
