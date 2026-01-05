@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 设备管理工具
+# ROS2 Galactic版本 - 设备管理工具
 # 用于管理不同的XV设备序列号
 
 set -euo pipefail
@@ -42,16 +42,16 @@ init_config() {
     
     if [ ! -f "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" << EOF
-# XV设备配置文件
+# XV设备配置文件 (ROS2 Galactic版本)
 # 格式: DEVICE_ID=SERIAL_NUMBER:DEVICE_NAME:DESCRIPTION
 
-# 默认设备
-DEFAULT=250801DR48FP25002993:XV-Default:默认设备
+# 默认设备 (序列号需要带SN前缀)
+DEFAULT=SN250801DR48FP25002587:XV-Default:默认设备
 
 # 示例设备（请根据实际情况修改）
-# DEVICE_001=250801DR48FP25002993:XV-001:生产设备
-# DEVICE_002=250801DR48FP25003001:XV-002:测试设备
-# DEVICE_003=250801DR48FP25003015:XV-003:开发设备
+# DEVICE_001=SN250801DR48FP25002587:XV-001:生产设备
+# DEVICE_002=SN250801DR48FP25002613:XV-002:测试设备
+# DEVICE_003=SN250801DR48FP25003015:XV-003:开发设备
 EOF
         print_info "已创建默认配置文件: $CONFIG_FILE"
     fi
@@ -132,8 +132,8 @@ switch_device() {
     
     # 生成配置文件
     if [ -f "$GENERATE_SCRIPT" ]; then
-        print_info "正在生成配置文件..."
-        if "$GENERATE_SCRIPT" >/dev/null 2>&1; then
+        print_info "正在生成RViz2配置文件..."
+        if "$GENERATE_SCRIPT" "$serial" >/dev/null 2>&1; then
             print_info "✓ 配置文件生成成功"
         else
             print_error "✗ 配置文件生成失败"
@@ -146,7 +146,7 @@ switch_device() {
     print_info "设备切换完成！"
     print_info "当前设备: $name ($serial)"
     echo ""
-    print_info "现在可以运行: ./run_rostopic_menu.sh"
+    print_info "现在可以运行: ./run_ros2topic_menu.sh $serial"
 }
 
 # 添加新设备
@@ -223,7 +223,7 @@ interactive_switch() {
 # 显示帮助信息
 show_help() {
     cat << EOF
-XV设备管理工具
+ROS2 Galactic XV设备管理工具
 
 用法: $0 [命令] [参数]
 
@@ -300,3 +300,4 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
+

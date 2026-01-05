@@ -1,96 +1,154 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+ROS2 Galactic版本 - Pose to Markers转换节点
+将XV SDK的位姿数据转换为RViz2可视化的MarkerArray
+
+注意：ROS2中的XV SDK使用标准geometry_msgs/PoseStamped消息
+     （不同于ROS1中使用的自定义xv_sdk/PoseStampedConfidence消息）
+
+使用方法:
+    python3 pose_to_markers.py <设备序列号>
+    例如: python3 pose_to_markers.py SN250801DR48FP25002587
+    注意: 序列号需要带SN前缀
+"""
+
 import sys
-import rospy
-from xv_sdk.msg import PoseStampedConfidence
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import PoseStamped  # ROS2使用标准消息，非ROS1的PoseStampedConfidence
 from visualization_msgs.msg import Marker, MarkerArray
-import tf.transformations as tf_trans
-from rospy import Duration
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+import math
 
 
-SERIAL_NUMBER = sys.argv[1]
-class PoseStampedToMarkers:
-    def __init__(self):
-        self.in_topic   = rospy.get_param("~in_topic", f"/xv_sdk/{SERIAL_NUMBER}/slam/pose")
-        self.out_topic  = rospy.get_param("~out_topic", f"/xv_sdk/{SERIAL_NUMBER}/slam/pose_markers")
-        self.max_points = int(rospy.get_param("~max_points", 100))  # 轨迹最多保留点数
-        self.min_dist   = float(rospy.get_param("~min_dist", 0.01))  # 抽稀间距(米)
-        self.min_dt     = float(rospy.get_param("~min_dt", 0.0))     # 时间抽稀(秒)，0 表示不用
-        self.override_frame = rospy.get_param("~frame_id", "")       # 非空则强制改写 frame_id
-        self.arrow_scale = float(rospy.get_param("~arrow_scale", 0.5))  # 箭头大小
+class PoseStampedToMarkers(Node):
+    """将PoseStamped消息转换为MarkerArray进行可视化"""
+
+    def __init__(self, serial_number: str):
+        super().__init__(f'xv_pose_to_markers_{serial_number}')
+        
+        # ROS2中序列号已包含SN前缀，如: SN250801DR48FP25002568
+        self.serial_number = serial_number
+        
+        # 参数声明
+        self.declare_parameter('in_topic', f'/xv_sdk/{serial_number}/pose')
+        self.declare_parameter('out_topic', f'/xv_sdk/{serial_number}/pose_markers')
+        self.declare_parameter('max_points', 100)  # 轨迹最多保留点数
+        self.declare_parameter('min_dist', 0.01)   # 抽稀间距(米)
+        self.declare_parameter('min_dt', 0.0)      # 时间抽稀(秒)，0表示不用
+        self.declare_parameter('frame_id', '')     # 非空则强制改写 frame_id
+        self.declare_parameter('arrow_scale', 0.5) # 箭头大小
         
         # 时间窗口和渐变效果参数
-        self.time_window = float(rospy.get_param("~time_window", 5.0))  # 时间窗口长度(秒)
-        self.fade_duration = float(rospy.get_param("~fade_duration", 1.0))  # 渐变持续时间(秒)
-        self.stationary_threshold = float(rospy.get_param("~stationary_threshold", 2.0))  # 静止检测阈值(秒)
-        self.stationary_fade_speed = float(rospy.get_param("~stationary_fade_speed", 2.0))  # 静止时衰减速度
-        self.update_rate = float(rospy.get_param("~update_rate", 10.0))  # 更新频率(Hz)
+        self.declare_parameter('time_window', 5.0)              # 时间窗口长度(秒)
+        self.declare_parameter('fade_duration', 1.0)            # 渐变持续时间(秒)
+        self.declare_parameter('stationary_threshold', 2.0)     # 静止检测阈值(秒)
+        self.declare_parameter('stationary_fade_speed', 2.0)    # 静止时衰减速度
+        self.declare_parameter('update_rate', 10.0)             # 更新频率(Hz)
+
+        # 获取参数值
+        self.in_topic = self.get_parameter('in_topic').value
+        self.out_topic = self.get_parameter('out_topic').value
+        self.max_points = self.get_parameter('max_points').value
+        self.min_dist = self.get_parameter('min_dist').value
+        self.min_dt = self.get_parameter('min_dt').value
+        self.override_frame = self.get_parameter('frame_id').value
+        self.arrow_scale = self.get_parameter('arrow_scale').value
+        self.time_window = self.get_parameter('time_window').value
+        self.fade_duration = self.get_parameter('fade_duration').value
+        self.stationary_threshold = self.get_parameter('stationary_threshold').value
+        self.stationary_fade_speed = self.get_parameter('stationary_fade_speed').value
+        self.update_rate = self.get_parameter('update_rate').value
+
+        # QoS配置
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=200
+        )
 
         # 发布MarkerArray消息
-        self.pub = rospy.Publisher(self.out_topic, MarkerArray, queue_size=1, latch=True)
+        self.pub = self.create_publisher(MarkerArray, self.out_topic, 10)
 
         self.markers = []  # 存储所有marker，每个元素是(marker, create_time)的元组
         self.last_ps = None
         self.last_stamp = None
-        self.last_movement_time = rospy.Time.now()  # 记录最后一次运动时间
+        self.last_movement_time = self.get_clock().now()  # 记录最后一次运动时间
         self.is_stationary = False  # 是否处于静止状态
 
-        self.sub = rospy.Subscriber(self.in_topic, PoseStampedConfidence, self.cb, queue_size=200)
-        
-        # 添加定时器来定期更新marker透明度
-        self.update_timer = rospy.Timer(rospy.Duration(1.0/self.update_rate), self.update_markers)
-        rospy.loginfo("PoseStampedToMarkers: in=%s (PoseStamped) -> out=%s (MarkerArray)",
-                      self.in_topic, self.out_topic)
-                      
+        # 订阅PoseStamped消息
+        self.sub = self.create_subscription(
+            PoseStamped,
+            self.in_topic,
+            self.pose_callback,
+            qos_profile
+        )
 
-    def cb(self, ps: PoseStampedConfidence):
+        # 创建定时器来定期更新marker透明度
+        timer_period = 1.0 / self.update_rate
+        self.update_timer = self.create_timer(timer_period, self.update_markers)
+
+        self.get_logger().info(
+            f"PoseStampedToMarkers: in={self.in_topic} (PoseStamped) -> out={self.out_topic} (MarkerArray)"
+        )
+
+    def pose_callback(self, ps: PoseStamped):
+        """处理接收到的PoseStamped消息"""
         # 可选：强制改写坐标系
         if self.override_frame:
-            ps.poseMsg.header.frame_id = self.override_frame
+            ps.header.frame_id = self.override_frame
+
+        current_time = self.get_clock().now()
+        current_stamp = rclpy.time.Time.from_msg(ps.header.stamp)
+
         # 时间抽稀
         if self.min_dt > 0 and self.last_stamp is not None:
-            if (ps.poseMsg.header.stamp - self.last_stamp).to_sec() < self.min_dt:
+            dt = (current_stamp - self.last_stamp).nanoseconds / 1e9
+            if dt < self.min_dt:
                 return
 
         # 距离抽稀
         if self.last_ps is not None:
-            dx = ps.poseMsg.pose.position.x - self.last_ps.poseMsg.pose.position.x
-            dy = ps.poseMsg.pose.position.y - self.last_ps.poseMsg.pose.position.y
-            dz = ps.poseMsg.pose.position.z - self.last_ps.poseMsg.pose.position.z
-            if (dx*dx + dy*dy + dz*dz) < (self.min_dist**2):
+            dx = ps.pose.position.x - self.last_ps.pose.position.x
+            dy = ps.pose.position.y - self.last_ps.pose.position.y
+            dz = ps.pose.position.z - self.last_ps.pose.position.z
+            if (dx*dx + dy*dy + dz*dz) < (self.min_dist ** 2):
                 return
 
         self.last_ps = ps
-        self.last_stamp = ps.poseMsg.header.stamp
-        self.last_movement_time = rospy.Time.now()  # 更新运动时间
+        self.last_stamp = current_stamp
+        self.last_movement_time = current_time  # 更新运动时间
         self.is_stationary = False  # 重置静止状态
 
         # 创建箭头marker
         marker = Marker()
-        marker.header = ps.poseMsg.header
+        marker.header = ps.header
+        if not marker.header.frame_id:
+            marker.header.frame_id = "map"
         marker.ns = "pose_arrows"
         marker.id = len(self.markers)
         marker.type = Marker.ARROW
         marker.action = Marker.ADD
-        
+
         # 设置位置和方向
-        marker.pose = ps.poseMsg.pose
-        
+        marker.pose = ps.pose
+
         # 设置箭头大小
         marker.scale.x = self.arrow_scale * 0.3333  # 箭头长度
-        marker.scale.y = self.arrow_scale * 0.01  # 箭头宽度
-        marker.scale.z = self.arrow_scale * 0.01  # 箭头高度
-        
+        marker.scale.y = self.arrow_scale * 0.01    # 箭头宽度
+        marker.scale.z = self.arrow_scale * 0.01    # 箭头高度
+
         # 设置颜色（初始完全不透明）
         marker.color.r = 1.0
         marker.color.g = 0.0
         marker.color.b = 0.0
         marker.color.a = 1.0
-        
+
         # 添加到列表，同时记录创建时间
-        create_time = rospy.Time.now()
+        create_time = current_time
         self.markers.append((marker, create_time))
-        
+
         # 限制marker数量
         if len(self.markers) > self.max_points:
             self.markers.pop(0)
@@ -98,47 +156,47 @@ class PoseStampedToMarkers:
             for i, (m, _) in enumerate(self.markers):
                 m.id = i
 
-    def update_markers(self, event):
+    def update_markers(self):
         """定时更新marker透明度"""
-        current_time = rospy.Time.now()
-        
+        current_time = self.get_clock().now()
+
         # 检测是否静止
-        time_since_movement = (current_time - self.last_movement_time).to_sec()
+        time_since_movement = (current_time - self.last_movement_time).nanoseconds / 1e9
         if time_since_movement > self.stationary_threshold:
             self.is_stationary = True
         else:
             self.is_stationary = False
-        
+
         # 更新每个marker的透明度
         markers_to_remove = []
         for i, (marker, create_time) in enumerate(self.markers):
-            age = (current_time - create_time).to_sec()
-            
+            age = (current_time - create_time).nanoseconds / 1e9
+
             # 计算透明度
             alpha = self.calculate_alpha(age, time_since_movement)
-            
+
             if alpha <= 0:
                 # 完全透明的marker标记为删除
                 markers_to_remove.append(i)
             else:
                 # 更新透明度
                 marker.color.a = alpha
-        
+
         # 移除完全透明的marker（从后往前删除，避免索引问题）
         for i in reversed(markers_to_remove):
             self.markers.pop(i)
-        
+
         # 重新分配ID
         for i, (marker, _) in enumerate(self.markers):
             marker.id = i
-        
+
         # 发布更新后的MarkerArray
         if self.markers:
             marker_array = MarkerArray()
             marker_array.markers = [marker for marker, _ in self.markers]
             self.pub.publish(marker_array)
 
-    def calculate_alpha(self, age, time_since_movement):
+    def calculate_alpha(self, age: float, time_since_movement: float) -> float:
         """计算marker的透明度"""
         if self.is_stationary:
             # 静止状态：加速衰减
@@ -148,23 +206,44 @@ class PoseStampedToMarkers:
         else:
             # 运动状态：正常衰减
             base_alpha = 1.0
-        
+
         # 时间窗口内的marker保持不透明
         if age <= self.time_window:
             return base_alpha
-        
+
         # 超出时间窗口的marker开始渐变
         fade_start = self.time_window
         fade_end = self.time_window + self.fade_duration
-        
+
         if age >= fade_end:
             return 0.0  # 完全透明
-        
+
         # 线性渐变
         fade_progress = (age - fade_start) / self.fade_duration
         return base_alpha * (1.0 - fade_progress)
 
+
+def main(args=None):
+    if len(sys.argv) < 2:
+        print("用法: python3 pose_to_markers.py <设备序列号>")
+        print("示例: python3 pose_to_markers.py SN250801DR48FP25002587")
+        print("注意: 序列号需要带SN前缀")
+        sys.exit(1)
+
+    serial_number = sys.argv[1]
+    
+    rclpy.init(args=args)
+    node = PoseStampedToMarkers(serial_number)
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
 if __name__ == "__main__":
-    rospy.init_node(f"xv_pose_to_markers_{SERIAL_NUMBER}")
-    PoseStampedToMarkers()
-    rospy.spin()
+    main()
+

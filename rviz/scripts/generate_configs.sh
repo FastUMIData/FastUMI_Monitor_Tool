@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# RViz配置文件生成脚本
+# ROS2 Galactic版本 - RViz2配置文件生成脚本
 # 使用环境变量 XV_DEVICE_SERIAL 替换模板中的占位符
 
 set -uo pipefail
@@ -45,8 +45,10 @@ check_environment() {
         echo "  2. 环境变量: export XV_DEVICE_SERIAL=你的设备序列号"
         echo ""
         echo "示例："
-        echo "  $0 250801DR48FP25002993"
-        echo "  export XV_DEVICE_SERIAL=250801DR48FP25002993 && $0"
+        echo "  $0 SN250801DR48FP25002587"
+        echo "  export XV_DEVICE_SERIAL=SN250801DR48FP25002587 && $0"
+        echo ""
+        echo "注意: 序列号需要带SN前缀"
         exit 1
     fi
     
@@ -73,7 +75,7 @@ generate_configs() {
     local count=0
     local errors=0
     
-    print_info "开始生成配置文件..."
+    print_info "开始生成RViz2配置文件..."
     
     # 处理所有模板文件
     for template_file in "$TEMPLATE_DIR"/*.template; do
@@ -149,18 +151,18 @@ show_usage() {
     echo "使用方法："
     echo "  1. 设置环境变量: export XV_DEVICE_SERIAL=你的设备序列号"
     echo "  2. 运行生成脚本: $0"
-    echo "  3. 启动rviz: ./run_rostopic_menu.sh"
+    echo "  3. 启动监控菜单: ./run_ros2topic_menu.sh <设备序列号>"
     echo ""
     echo "示例："
-    echo "  export XV_DEVICE_SERIAL=250801DR48FP25002993"
+    echo "  export XV_DEVICE_SERIAL=250801DR48FP25002587"
     echo "  $0"
-    echo "  ./run_rostopic_menu.sh"
+    echo "  ./run_ros2topic_menu.sh 250801DR48FP25002587"
 }
 
 # 主函数
 main() {
     echo "=========================================="
-    echo "    RViz 配置文件生成工具"
+    echo "    ROS2 Galactic RViz2 配置文件生成工具"
     echo "=========================================="
     
     check_environment "$@"
@@ -179,3 +181,4 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
+
